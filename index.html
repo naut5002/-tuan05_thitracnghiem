@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ôn Thi TN — Trắc nghiệm thông minh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f1419;
+            --bg-card: #1a2332;
+            --bg-hover: #243044;
+            --border: #2d3a4f;
+            --text: #e8edf4;
+            --text-muted: #8b9cb3;
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --accent: #06b6d4;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #06b6d4 50%, #10b981 100%);
+            --shadow: 0 8px 32px rgba(0,0,0,0.35);
+            --radius: 14px;
+        }
+        [data-theme="light"] {
+            --bg: #f0f4f8;
+            --bg-card: #ffffff;
+            --bg-hover: #e8eef5;
+            --border: #d1dbe8;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --shadow: 0 8px 32px rgba(15,23,42,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+        .app-shell { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 260px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: transform 0.3s;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            margin-bottom: 28px;
+        }
+        .logo-icon {
+            width: 44px; height: 44px;
+            background: var(--gradient);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+        }
+        .logo h1 { font-size: 17px; font-weight: 700; line-height: 1.2; }
+        .logo small { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; border-radius: 10px;
+            cursor: pointer; color: var(--text-muted);
+            font-weight: 500; font-size: 14px;
+            transition: all 0.2s; border: none; background: none;
+            width: 100%; text-align: left;
+        }
+        .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+        .nav-item.active { background: rgba(99,102,241,0.15); color: var(--primary); }
+        .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
+        .main { flex: 1; margin-left: 260px; padding: 28px 32px; max-width: 1200px; }
+        .page { display: none; animation: fadeIn 0.35s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        .page-header { margin-bottom: 28px; }
+        .page-header h2 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+        .page-header p { color: var(--text-muted); font-size: 14px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        .stat-card .label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+        .stat-card .value { font-size: 32px; font-weight: 700; }
+        .stat-card .value.gradient { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 18px; border-radius: 10px;
+            font-family: inherit; font-size: 14px; font-weight: 600;
+            border: none; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-ghost { background: var(--bg-hover); color: var(--text); border: 1px solid var(--border); }
+        .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-lg { padding: 14px 28px; font-size: 16px; }
+        .btn-block { width: 100%; justify-content: center; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 10px; }
+        .badge {
+            display: inline-block; padding: 4px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 600;
+        }
+        .badge-primary { background: rgba(99,102,241,0.2); color: var(--primary); }
+        .badge-success { background: rgba(16,185,129,0.2); color: var(--success); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
+        input[type="text"], input[type="number"], input[type="password"], input[type="file"], textarea, select {
+            width: 100%; padding: 11px 14px;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text);
+            font-family: inherit; font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); }
+        textarea { resize: vertical; min-height: 80px; }
+        .search-bar { position: relative; margin-bottom: 16px; }
+        .search-bar input { padding-left: 40px; }
+        .search-bar::before { content: '🔍'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+        .question-list { max-height: 520px; overflow-y: auto; }
+        .question-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 16px; border-radius: 10px;
+            border: 1px solid var(--border); margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .question-item:hover { border-color: var(--primary); background: var(--bg-hover); }
+        .question-item .num {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: rgba(99,102,241,0.15); color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 13px; flex-shrink: 0;
+        }
+        .question-item .content { flex: 1; min-width: 0; }
+        .question-item .content .q-text { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .question-item .content .meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .question-item .actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .question-item .actions button { padding: 6px 10px; font-size: 12px; }
+        .question-thumb { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
+        .question-image {
+            display: block; max-width: 100%; max-height: 420px;
+            object-fit: contain; border-radius: 10px; border: 1px solid var(--border);
+            margin: 0 auto 18px; background: var(--bg);
+        }
+        .image-preview { display: none; max-width: 100%; max-height: 220px; object-fit: contain; border-radius: 10px; border: 1px solid var(--border); margin-top: 10px; }
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--bg);
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(99,102,241,0.05);
+        }
+        .drop-zone .icon { font-size: 48px; margin-bottom: 12px; }
+        .drop-zone p { color: var(--text-muted); font-size: 14px; margin-top: 8px; }
+        .file-list { margin-top: 16px; }
+        .file-chip {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 14px; background: var(--bg-hover);
+            border-radius: 20px; font-size: 13px; margin: 4px;
+            border: 1px solid var(--border);
+        }
+        .progress-bar-wrap { background: var(--bg-hover); border-radius: 20px; height: 8px; overflow: hidden; margin: 16px 0; }
+        .progress-bar { height: 100%; background: var(--gradient); border-radius: 20px; transition: width 0.4s; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+        .timer { font-size: 20px; font-weight: 700; color: var(--warning); font-variant-numeric: tabular-nums; }
+        .quiz-question { font-size: 18px; font-weight: 600; line-height: 1.6; margin-bottom: 20px; }
+        .option {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 14px 18px; border-radius: 12px;
+            border: 2px solid var(--border); margin-bottom: 10px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .option:hover { border-color: var(--primary); background: rgba(99,102,241,0.05); }
+        .option.selected { border-color: var(--primary); background: rgba(99,102,241,0.1); }
+        .option.correct { border-color: var(--success); background: rgba(16,185,129,0.12); }
+        .option.wrong { border-color: var(--danger); background: rgba(239,68,68,0.12); }
+        .option .letter {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: var(--bg-hover); display: flex; align-items: center; justify-content: center;
+            font-weight: 700; flex-shrink: 0;
+        }
+        .feedback {
+            padding: 14px 18px; border-radius: 10px; margin-top: 16px;
+            font-weight: 600; display: none;
+        }
+        .feedback.show { display: block; }
+        .feedback.ok { background: rgba(16,185,129,0.15); color: var(--success); }
+        .feedback.err { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 28px;
+            max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+        .modal h3 { font-size: 20px; margin-bottom: 16px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        .result-screen { text-align: center; padding: 40px 20px; }
+        .result-circle {
+            width: 160px; height: 160px; border-radius: 50%;
+            background: var(--gradient); margin: 0 auto 24px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 42px; font-weight: 700; color: white;
+        }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            padding: 14px 20px; border-radius: 10px; color: white;
+            font-size: 14px; font-weight: 500; box-shadow: var(--shadow);
+            animation: slideIn 0.3s ease;
+        }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.info { background: var(--primary); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+        .loading { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+        .empty-state .icon { font-size: 56px; margin-bottom: 16px; opacity: 0.5; }
+        .mode-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+        .mode-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 24px; cursor: pointer;
+            transition: all 0.25s; text-align: center;
+        }
+        .mode-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow); }
+        .mode-card .icon { font-size: 40px; margin-bottom: 12px; }
+        .mode-card h3 { font-size: 16px; margin-bottom: 8px; }
+        .mode-card p { font-size: 13px; color: var(--text-muted); }
+        .mobile-toggle { display: none; position: fixed; top: 16px; left: 16px; z-index: 200; padding: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 20px; }
+        .ai-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 16px; }
+        .ai-status.ready { background: rgba(16,185,129,0.12); color: var(--success); }
+        .ai-status.off { background: rgba(245,158,11,0.12); color: var(--warning); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+        .history-item { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 14px; }
+        .history-item:last-child { border-bottom: none; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; padding: 20px 16px; padding-top: 60px; }
+            .mobile-toggle { display: block; }
+        }
+    </style>
+</head>
+<body>
+<button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+<div class="toast-container" id="toasts"></div>
+
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <div class="logo-icon">📚</div>
+            <div>
+                <h1>Ôn Thi TN</h1>
+                <small>Trắc nghiệm thông minh</small>
+            </div>
+        </div>
+        <nav>
+            <button class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+                <span class="icon">🏠</span> Tổng quan
+            </button>
+            <button class="nav-item" data-page="questions" data-admin-only="true" onclick="navigate('questions')">
+                <span class="icon">📝</span> Ngân hàng câu hỏi
+            </button>
+            <button class="nav-item" data-page="import" data-auth-only="true" onclick="navigate('import')">
+                <span class="icon">🤖</span> AI Nhận diện file
+            </button>
+            <button class="nav-item" data-page="quiz" data-auth-only="true" onclick="navigate('quiz')">
+                <span class="icon">🎯</span> Làm bài
+            </button>
+            <button class="nav-item" data-page="settings" data-admin-only="true" onclick="navigate('settings')">
+                <span class="icon">⚙️</span> Cài đặt
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="accountBox" style="padding:10px 12px;margin-bottom:10px;color:var(--text-muted);font-size:13px;line-height:1.6"></div>
+            <button class="nav-item" data-auth-only="true" onclick="logout()">
+                <span class="icon">🚪</span> Đăng xuất
+            </button>
+            <button class="nav-item" data-guest-only="true" onclick="showLogin()">
+                <span class="icon">🔐</span> Đăng nhập
+            </button>
+            <button class="nav-item" onclick="toggleTheme()">
+                <span class="icon" id="themeIcon">🌙</span> Đổi giao diện
+            </button>
+        </div>
+    </aside>
+
+    <main class="main">
+        <!-- DASHBOARD -->
+        <section class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h2>Xin chào! 👋</h2>
+                <p>Hệ thống ôn tập trắc nghiệm với AI nhận diện file tự động</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="label">Tổng câu hỏi</div>
+                    <div class="value gradient" id="statTotal">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Bài đã làm</div>
+                    <div class="value" id="statSessions">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Điểm trung bình</div>
+                    <div class="value" id="statAvg">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Lần làm gần nhất</div>
+                    <div class="value" style="font-size:18px" id="statLast">—</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">🚀 Bắt đầu nhanh</div>
+                <div class="mode-cards">
+                    <div class="mode-card" onclick="navigate('import')">
+                        <div class="icon">🤖</div>
+                        <h3>Import bằng AI</h3>
+                        <p>Tải file Word, PDF, ảnh — AI tự nhận diện câu hỏi</p>
+                    </div>
+                    <div class="mode-card" onclick="startQuiz('practice')">
+                        <div class="icon">📖</div>
+                        <h3>Ôn tập</h3>
+                        <p>Làm bài, xem đáp án ngay sau mỗi câu</p>
+                    </div>
+                    <div class="mode-card" onclick="startQuiz('exam')">
+                        <div class="icon">⏱️</div>
+                        <h3>Thi thử</h3>
+                        <p>Giới hạn thời gian, xem kết quả cuối bài</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📚 Các bộ ôn tập đã lưu</div>
+                <div id="studySetList"></div>
+            </div>
+            <div class="card" id="recentHistoryCard" style="display:none">
+                <div class="card-title">📊 Lịch sử gần đây</div>
+                <div id="recentHistory"></div>
+            </div>
+        </section>
+
+        <!-- QUESTIONS -->
+        <section class="page" id="page-questions">
+            <div class="page-header">
+                <h2>Ngân hàng câu hỏi</h2>
+                <p>Quản lý, tìm kiếm và chỉnh sửa câu hỏi trong bộ: <strong id="currentSetName">Chưa có bộ ôn</strong></p>
+            </div>
+            <div class="card">
+                <div class="btn-group" style="margin-bottom:16px">
+                    <button class="btn btn-success" data-admin-only="true" onclick="showQuestionForm()">➕ Thêm câu hỏi</button>
+                    <button class="btn btn-primary" data-admin-only="true" onclick="showBulkModal()">📋 Nhập nhanh</button>
+                    <button class="btn btn-ghost" data-admin-only="true" onclick="exportJSON()">📤 Xuất JSON</button>
+                    <button class="btn btn-ghost" data-admin-only="true" onclick="document.getElementById('importJsonInput').click()">📥 Nhập JSON</button>
+                    <input type="file" id="importJsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
+                    <button class="btn btn-danger" data-admin-only="true" onclick="clearAll()">🗑️ Xóa tất cả</button>
+                </div>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm câu hỏi..." oninput="renderQuestionList()">
+                </div>
+                <div class="question-list" id="questionList"></div>
+            </div>
+        </section>
+
+        <!-- AI IMPORT -->
+        <section class="page" id="page-import">
+            <div class="page-header">
+                <h2>🤖 AI Nhận diện file bài ôn tập</h2>
+                <p>Hỗ trợ: TXT, DOCX, PDF, JPG, PNG — tải nhiều file cùng lúc</p>
+            </div>
+            <div id="aiStatusBar" class="ai-status off">
+                <span class="dot"></span>
+                <span id="aiStatusText">Chưa cấu hình AI — dùng bộ phân tích thông minh (không cần API)</span>
+            </div>
+            <div class="card">
+                <div class="form-group">
+                    <label>Tên bộ ôn sẽ lưu</label>
+                    <input type="text" id="importSetName" placeholder="VD: HA6 HUBT, Lịch sử Đảng, Ôn tập chương 1...">
+                </div>
+                <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="icon">📁</div>
+                    <strong>Kéo thả file hoặc bấm để chọn</strong>
+                    <p>Hỗ trợ .txt, .docx, .pdf, .jpg, .jpeg, .png — có thể chọn nhiều file</p>
+                    <input type="file" id="fileInput" multiple accept=".txt,.docx,.pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFiles(this.files)">
+                </div>
+                <div class="file-list" id="fileList"></div>
+                <div class="btn-group" style="margin-top:20px">
+                    <button class="btn btn-primary btn-lg" id="btnProcessFiles" onclick="processAllFiles()" disabled>
+                        🔍 Phân tích & Thêm câu hỏi
+                    </button>
+                    <button class="btn btn-ghost" onclick="clearFileQueue()">Xóa danh sách file</button>
+                </div>
+                <div id="processProgress" style="display:none;margin-top:16px">
+                    <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px" id="processStatus">Đang xử lý...</div>
+                    <div class="progress-bar-wrap"><div class="progress-bar" id="processBar" style="width:0%"></div></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">💡 Mẹo sử dụng AI</div>
+                <ul style="color:var(--text-muted);font-size:14px;line-height:1.8;padding-left:20px">
+                    <li><strong>Không cần API:</strong> Bộ phân tích thông minh tự nhận dạng câu hỏi từ Word/PDF/TXT</li>
+                    <li><strong>Có API key:</strong> Vào Cài đặt → nhập Gemini API key để AI đọc chính xác hơn (ảnh chụp, bảng phức tạp)</li>
+                    <li>Ảnh chụp đề thi: dùng OCR + AI để trích xuất câu hỏi tự động</li>
+                    <li>Có thể tải nhiều file cùng lúc — hệ thống gộp tất cả câu hỏi</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- QUIZ -->
+        <section class="page" id="page-quiz">
+            <div id="quizSetup">
+                <div class="page-header">
+                    <h2>Làm bài trắc nghiệm</h2>
+                    <p>Chọn chế độ và bắt đầu ôn tập</p>
+                </div>
+                <div class="mode-cards">
+                    <div class="mode-card" onclick="startQuiz('practice')">
+                        <div class="icon">📖</div>
+                        <h3>Ôn tập</h3>
+                        <p>Chọn đáp án → xem kết quả ngay</p>
+                    </div>
+                    <div class="mode-card" onclick="startQuiz('exam')">
+                        <div class="icon">⏱️</div>
+                        <h3>Thi thử</h3>
+                        <p><span id="examTimeLabel">45</span> phút, không hiện đáp án</p>
+                    </div>
+                    <div class="mode-card" onclick="startQuiz('shuffle')">
+                        <div class="icon">🔀</div>
+                        <h3>Ngẫu nhiên</h3>
+                        <p>Trộn thứ tự câu hỏi mỗi lần</p>
+                    </div>
+                </div>
+            </div>
+            <div id="quizActive" style="display:none">
+                <div class="card">
+                    <div class="quiz-header">
+                        <div>
+                            <span class="badge badge-primary" id="quizModeBadge">Ôn tập</span>
+                            <span style="margin-left:8px;font-size:14px;color:var(--text-muted)">
+                                Câu <strong id="currentNum">1</strong> / <strong id="totalNum">0</strong>
+                            </span>
+                        </div>
+                        <div class="timer" id="timerDisplay" style="display:none">⏱️ 45:00</div>
+                    </div>
+                    <div class="progress-bar-wrap"><div class="progress-bar" id="quizProgress" style="width:0%"></div></div>
+                    <div class="quiz-question" id="quizQuestion"></div>
+                    <div id="quizOptions"></div>
+                    <div class="feedback" id="quizFeedback"></div>
+                    <div class="btn-group" style="margin-top:24px;justify-content:center">
+                        <button class="btn btn-ghost" onclick="prevQ()">← Trước</button>
+                        <button class="btn btn-primary" onclick="nextQ()">Sau →</button>
+                        <button class="btn btn-warning" onclick="finishQuiz()">Kết thúc</button>
+                        <button class="btn btn-ghost" onclick="exitQuiz()">Thoát</button>
+                    </div>
+                </div>
+            </div>
+            <div id="quizResult" style="display:none">
+                <div class="card result-screen">
+                    <div class="result-circle" id="resultScore">0%</div>
+                    <h2 style="margin-bottom:8px" id="resultTitle">Hoàn thành!</h2>
+                    <p style="color:var(--text-muted);margin-bottom:24px" id="resultDetail"></p>
+                    <div class="btn-group" style="justify-content:center">
+                        <button class="btn btn-primary" onclick="startQuiz(lastQuizMode)">Làm lại</button>
+                        <button class="btn btn-warning" id="retryWrongBtn" onclick="retryWrongQuestions()">Làm lại câu sai</button>
+                        <button class="btn btn-ghost" onclick="renderQuizReview('all')">Xem đúng/sai</button>
+                        <button class="btn btn-ghost" onclick="exitQuiz()">Về trang chủ</button>
+                    </div>
+                </div>
+                <div class="card" id="quizReviewCard" style="display:none">
+                    <div class="card-title">📋 Chi tiết câu trả lời</div>
+                    <div class="btn-group" style="margin-bottom:16px">
+                        <button class="btn btn-ghost" onclick="renderQuizReview('all')">Tất cả</button>
+                        <button class="btn btn-ghost" onclick="renderQuizReview('wrong')">Câu sai</button>
+                        <button class="btn btn-ghost" onclick="renderQuizReview('correct')">Câu đúng</button>
+                    </div>
+                    <div id="quizReviewList"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section class="page" id="page-settings">
+            <div class="page-header">
+                <h2>Cài đặt</h2>
+                <p>Tùy chỉnh AI và chế độ thi</p>
+            </div>
+            <div class="card">
+                <div class="card-title">🤖 Cấu hình Gemini AI (tùy chọn)</div>
+                <input type="hidden" id="aiProvider" value="gemini">
+                <div class="form-group">
+                    <label>Gemini API Key</label>
+                    <input type="password" id="aiApiKey" placeholder="Dán Gemini API key từ Google AI Studio..." onchange="saveSettings()">
+                </div>
+                <div class="form-group" id="modelGroup" style="display:none">
+                    <label>Model AI</label>
+                    <select id="aiModel" onchange="onModelChange()"></select>
+                    <small id="modelHint" style="display:block;margin-top:6px;color:var(--text-muted);font-size:12px;line-height:1.5"></small>
+                </div>
+                <div id="aiErrorHelp" style="display:none;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.1);color:var(--danger);font-size:13px;line-height:1.6;margin-bottom:12px"></div>
+                <button class="btn btn-ghost" onclick="testAI()">🧪 Kiểm tra kết nối AI</button>
+            </div>
+            <div class="card">
+                <div class="card-title">⏱️ Cài đặt thi</div>
+                <div class="form-group">
+                    <label>Thời gian thi (phút)</label>
+                    <input type="number" id="examMinutes" value="45" min="5" max="180" onchange="saveSettings()">
+                </div>
+                <div class="form-group">
+                    <label>Chủ đề / Môn học (hiển thị)</label>
+                    <input type="text" id="subjectName" placeholder="VD: Tin học THPT, TTNT 2022..." onchange="saveSettings()">
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">💾 Dữ liệu</div>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Dữ liệu được lưu tự động vào cơ sở dữ liệu trình duyệt (IndexedDB), đồng thời giữ bản tương thích localStorage.</p>
+                <div class="btn-group">
+                    <button class="btn btn-ghost" onclick="exportJSON()">📤 Sao lưu câu hỏi</button>
+                    <button class="btn btn-danger" onclick="clearAll()">🗑️ Xóa toàn bộ dữ liệu</button>
+                </div>
+            </div>
+            <div class="card" data-admin-only="true">
+                <div class="card-title">👥 Quản lý tài khoản</div>
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">Admin có thể xem, phân quyền hoặc xóa các tài khoản đã đăng ký.</p>
+                <div id="userManagementList"></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- MODALS Admin mặc định: admin / admin123 --> 
+<div class="modal-overlay" id="authModal">
+    <div class="modal">
+        <h3 id="authTitle">Đăng nhập</h3>
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">HỆ THỐNG ÔN THI TRẮC NGHIỆM FREE</p>
+        <div class="form-group">
+            <label>Tên đăng nhập</label>
+            <input type="text" id="authUsername" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="authPassword" autocomplete="current-password">
+        </div>
+        <div class="form-group" id="authNameGroup" style="display:none">
+            <label>Tên hiển thị</label>
+            <input type="text" id="authDisplayName" placeholder="VD: Nguyễn Văn A">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="authSwitchBtn" onclick="toggleAuthMode()">Đăng ký tài khoản</button>
+            <button class="btn btn-primary" onclick="submitAuth()" id="authSubmitBtn">Đăng nhập</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="questionModal">
+    <div class="modal">
+        <h3 id="formTitle">Thêm câu hỏi</h3>
+        <input type="hidden" id="editIndex" value="-1">
+        <div class="form-group"><label>Câu hỏi</label><textarea id="qtext" rows="3"></textarea></div>
+        <div class="form-group"><label>A</label><input type="text" id="optA"></div>
+        <div class="form-group"><label>B</label><input type="text" id="optB"></div>
+        <div class="form-group"><label>C</label><input type="text" id="optC"></div>
+        <div class="form-group"><label>D</label><input type="text" id="optD"></div>
+        <div class="form-group">
+            <label>Ảnh minh họa câu hỏi</label>
+            <input type="file" id="qimageFile" accept="image/*" onchange="previewQuestionImage(this.files[0])">
+            <input type="hidden" id="qimageData">
+            <img id="qimagePreview" class="image-preview" alt="Ảnh câu hỏi">
+            <button class="btn btn-ghost" style="margin-top:10px" onclick="clearQuestionImage()" type="button">Xóa ảnh</button>
+        </div>
+        <div class="form-group">
+            <label>Đáp án đúng</label>
+            <select id="correct"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="hideQuestionForm()">Hủy</button>
+            <button class="btn btn-success" onclick="saveQuestion()">💾 Lưu</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="bulkModal">
+    <div class="modal" style="max-width:720px">
+        <h3>Nhập nhanh nhiều câu</h3>
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:12px">Copy từ Word/PDF và dán vào đây</p>
+        <textarea id="bulkText" rows="16" style="font-family:monospace;font-size:13px"></textarea>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="hideBulkModal()">Đóng</button>
+            <button class="btn btn-success" onclick="parseBulk()">✅ Phân tích & Thêm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const STORAGE_KEY = 'ontn_questions_v2';
+const SETTINGS_KEY = 'ontn_settings_v2';
+const HISTORY_KEY = 'ontn_history_v2';
+const LEGACY_KEY = 'ttnt_questions';
+const ACTIVE_SET_KEY = 'ontn_active_set_v1';
+const USERS_KEY = 'ontn_users_v1';
+const SESSION_KEY = 'ontn_session_v1';
+const ADMIN_ID = 'admin';
+const DB_NAME = 'ontn_database_v1';
+const DB_STORE = 'records';
+const API_BASE = location.protocol === 'http:' || location.protocol === 'https:' ? '' : null;
+
+let questions = [];
+let studySets = [];
+let activeSetId = '';
+let users = [];
+let currentUser = null;
+let authMode = 'login';
+let settings = { aiProvider: 'gemini', aiApiKey: '', aiModel: 'gemini-3.5-flash', examMinutes: 45, subjectName: '' };
+
+const AI_MODELS = {
+    gemini: [
+        { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash — khuyên dùng, ổn định', hint: 'Model Gemini stable hiện hành, phù hợp trích xuất câu hỏi.' },
+        { value: 'gemini-3-flash', label: 'Gemini 3 Flash — nhanh, chi phí thấp', hint: 'Model preview, dùng khi 3.5 Flash không khả dụng.' },
+        { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash — dự phòng ổn định', hint: 'Model 2.5 ổn định cho tác vụ nhập liệu và phân tích văn bản.' },
+        { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite — nhẹ, tiết kiệm quota', hint: 'Nhanh và tiết kiệm, phù hợp tài khoản miễn phí hoặc file ngắn.' },
+        { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro — chính xác cao', hint: 'Mạnh hơn nhưng có thể tốn quota hơn.' }
+    ]
+};
+let history = [];
+let fileQueue = [];
+let currentEditIndex = -1;
+
+// Quiz state
+let quizQuestions = [], quizIdx = 0, quizScore = 0, quizAnswered = [], quizSelections = [];
+let quizMode = 'practice', lastQuizMode = 'practice', timerInterval = null, timeLeft = 0;
+let lastQuizReview = [];
+
+// ==================== BROWSER DATABASE ====================
+async function apiGetRecord(key) {
+    if (!API_BASE) throw new Error('Không chạy qua backend');
+    const res = await fetch(`${API_BASE}/api/records/${encodeURIComponent(key)}`);
+    if (!res.ok) throw new Error('Không đọc được dữ liệu server');
+    const data = await res.json();
+    return data.value;
+}
+
+async function apiSetRecord(key, value) {
+    if (!API_BASE) throw new Error('Không chạy qua backend');
+    const res = await fetch(`${API_BASE}/api/records/${encodeURIComponent(key)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value })
+    });
+    if (!res.ok) throw new Error('Không ghi được dữ liệu server');
+}
+
+async function apiDeleteRecord(key) {
+    if (!API_BASE) throw new Error('Không chạy qua backend');
+    const res = await fetch(`${API_BASE}/api/records/${encodeURIComponent(key)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Không xóa được dữ liệu server');
+}
+
+function openAppDb() {
+    return new Promise((resolve, reject) => {
+        if (!('indexedDB' in window)) { reject(new Error('IndexedDB không khả dụng')); return; }
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE);
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function dbGet(key, fallback = null) {
+    try {
+        const serverValue = await apiGetRecord(key);
+        if (serverValue !== null && serverValue !== undefined) return serverValue;
+    } catch (err) {
+        console.warn('Không đọc được server, dùng dữ liệu trình duyệt:', err);
+    }
+    try {
+        const db = await openAppDb();
+        return await new Promise((resolve, reject) => {
+            const req = db.transaction(DB_STORE, 'readonly').objectStore(DB_STORE).get(key);
+            req.onsuccess = () => resolve(req.result ?? fallback);
+            req.onerror = () => reject(req.error);
+        });
+    } catch (err) {
+        console.warn('Không đọc được IndexedDB, dùng localStorage:', err);
+        return fallback;
+    }
+}
+
+async function dbSet(key, value) {
+    try {
+        await apiSetRecord(key, value);
+    } catch (err) {
+        console.warn('Không ghi được server, dùng dữ liệu trình duyệt:', err);
+    }
+    try {
+        const db = await openAppDb();
+        await new Promise((resolve, reject) => {
+            const req = db.transaction(DB_STORE, 'readwrite').objectStore(DB_STORE).put(value, key);
+            req.onsuccess = resolve;
+            req.onerror = () => reject(req.error);
+        });
+    } catch (err) {
+        console.warn('Không ghi được IndexedDB, dữ liệu vẫn còn trong localStorage:', err);
+    }
+}
+
+async function dbDelete(key) {
+    try {
+        await apiDeleteRecord(key);
+    } catch (err) {
+        console.warn('Không xóa được server:', err);
+    }
+    try {
+        const db = await openAppDb();
+        await new Promise((resolve, reject) => {
+            const req = db.transaction(DB_STORE, 'readwrite').objectStore(DB_STORE).delete(key);
+            req.onsuccess = resolve;
+            req.onerror = () => reject(req.error);
+        });
+    } catch (err) {
+        console.warn('Không xóa được IndexedDB:', err);
+    }
+}
+
+function readLocalJSON(key, fallback = null) {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    try { return JSON.parse(raw); } catch { return fallback; }
+}
+
+// ==================== AUTH ====================
+async function loadUsers() {
+    users = await dbGet(USERS_KEY, readLocalJSON(USERS_KEY, []));
+    if (!users.some(u => u.id === ADMIN_ID)) {
+        users.unshift({
+            id: ADMIN_ID,
+            username: 'admin',
+            password: 'admin123',
+            displayName: 'Administrator',
+            role: 'admin',
+            createdAt: Date.now()
+        });
+        await saveUsers();
+    }
+    dbSet(USERS_KEY, users);
+}
+
+function saveUsers() {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    dbSet(USERS_KEY, users);
+}
+
+function loadSession() {
+    const userId = localStorage.getItem(SESSION_KEY);
+    currentUser = users.find(u => u.id === userId) || null;
+}
+
+function isAdmin() {
+    return currentUser?.role === 'admin';
+}
+
+function requireLogin() {
+    if (currentUser) {
+        document.getElementById('authModal').classList.remove('show');
+        return true;
+    }
+    document.getElementById('authModal').classList.add('show');
+    return false;
+}
+
+function showLogin() {
+    setAuthMode('login');
+    document.getElementById('authModal').classList.add('show');
+}
+
+function setAuthMode(mode) {
+    authMode = mode;
+    document.getElementById('authTitle').textContent = authMode === 'login' ? 'Đăng nhập' : 'Đăng ký';
+    document.getElementById('authNameGroup').style.display = authMode === 'register' ? 'block' : 'none';
+    document.getElementById('authSubmitBtn').textContent = authMode === 'login' ? 'Đăng nhập' : 'Đăng ký';
+    document.getElementById('authSwitchBtn').textContent = authMode === 'login' ? 'Đăng ký tài khoản' : 'Quay lại đăng nhập';
+}
+
+function toggleAuthMode() {
+    setAuthMode(authMode === 'login' ? 'register' : 'login');
+}
+
+function submitAuth() {
+    const username = document.getElementById('authUsername').value.trim().toLowerCase();
+    const password = document.getElementById('authPassword').value;
+    const displayName = document.getElementById('authDisplayName').value.trim();
+    if (!username || !password) { toast('Vui lòng nhập tên đăng nhập và mật khẩu', 'error'); return; }
+
+    if (authMode === 'register') {
+        if (users.some(u => u.username === username)) { toast('Tên đăng nhập đã tồn tại', 'error'); return; }
+        const user = {
+            id: 'user_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8),
+            username,
+            password,
+            displayName: displayName || username,
+            role: 'user',
+            createdAt: Date.now()
+        };
+        users.push(user);
+        saveUsers();
+        loginUser(user);
+        toast('Đăng ký thành công', 'success');
+        return;
+    }
+
+    const user = users.find(u => u.username === username && u.password === password);
+    if (!user) { toast('Sai tên đăng nhập hoặc mật khẩu', 'error'); return; }
+    loginUser(user);
+}
+
+function loginUser(user) {
+    currentUser = user;
+    localStorage.setItem(SESSION_KEY, user.id);
+    document.getElementById('authModal').classList.remove('show');
+    applyPermissions();
+    syncActiveQuestions();
+    updateDashboard();
+    renderUserManagement();
+    renderQuestionList();
+    navigate('dashboard');
+}
+
+function logout() {
+    currentUser = null;
+    localStorage.removeItem(SESSION_KEY);
+    questions = [];
+    activeSetId = '';
+    applyPermissions();
+    updateDashboard();
+    navigate('dashboard');
+}
+
+function applyPermissions() {
+    const loggedIn = !!currentUser;
+    document.querySelector('.app-shell').style.display = 'flex';
+    document.querySelector('.mobile-toggle').style.display = '';
+    document.querySelectorAll('[data-auth-only="true"]').forEach(el => {
+        el.style.display = loggedIn ? '' : 'none';
+    });
+    document.querySelectorAll('[data-guest-only="true"]').forEach(el => {
+        el.style.display = loggedIn ? 'none' : '';
+    });
+    document.querySelectorAll('[data-admin-only="true"]').forEach(el => {
+        el.style.display = isAdmin() ? '' : 'none';
+    });
+    const box = document.getElementById('accountBox');
+    if (box) {
+        box.innerHTML = currentUser
+            ? `<strong>${escapeHtml(currentUser.displayName || currentUser.username)}</strong><br>${isAdmin() ? 'Admin toàn quyền' : 'User'}`
+            : '<strong>Khách</strong><br>Có thể xem tài liệu đã lưu';
+    }
+    renderUserManagement();
+}
+
+function renderUserManagement() {
+    const el = document.getElementById('userManagementList');
+    if (!el || !isAdmin()) return;
+    el.innerHTML = users.map(user => {
+        const isSelf = user.id === currentUser?.id;
+        const isDefaultAdmin = user.id === ADMIN_ID;
+        const created = new Date(user.createdAt || Date.now()).toLocaleDateString('vi-VN');
+        return `
+            <div class="question-item" style="align-items:flex-start">
+                <div class="num">${user.role === 'admin' ? 'A' : 'U'}</div>
+                <div class="content">
+                    <div class="q-text">${escapeHtml(user.displayName || user.username)}</div>
+                    <div class="meta">@${escapeHtml(user.username)} · ${user.role === 'admin' ? 'Admin' : 'User'} · Tạo ${created}</div>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-ghost" onclick="toggleUserRole('${user.id}')" ${isDefaultAdmin ? 'disabled' : ''}>Đổi quyền</button>
+                    <button class="btn btn-danger" onclick="deleteUser('${user.id}')" ${isSelf || isDefaultAdmin ? 'disabled' : ''}>Xóa</button>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function toggleUserRole(id) {
+    if (!isAdmin()) { toast('Chỉ admin được đổi quyền tài khoản', 'error'); return; }
+    const user = users.find(u => u.id === id);
+    if (!user || user.id === ADMIN_ID) { toast('Không thể đổi quyền tài khoản admin mặc định', 'error'); return; }
+    user.role = user.role === 'admin' ? 'user' : 'admin';
+    saveUsers();
+    applyPermissions();
+    toast('Đã cập nhật quyền tài khoản', 'success');
+}
+
+function deleteUser(id) {
+    if (!isAdmin()) { toast('Chỉ admin được xóa tài khoản', 'error'); return; }
+    const user = users.find(u => u.id === id);
+    if (!user || user.id === ADMIN_ID || user.id === currentUser?.id) {
+        toast('Không thể xóa tài khoản này', 'error');
+        return;
+    }
+    if (!confirm(`Xóa tài khoản "${user.username}"? Dữ liệu bài làm của tài khoản này vẫn được giữ trong lịch sử.`)) return;
+    users = users.filter(u => u.id !== id);
+    saveUsers();
+    renderUserManagement();
+    updateDashboard();
+    toast('Đã xóa tài khoản', 'info');
+}
+
+// ==================== INIT ====================
+async function init() {
+    await loadUsers();
+    loadSession();
+    migrateLegacy();
+    await loadData();
+    await loadSettings();
+    applyTheme(localStorage.getItem('ontn_theme') || 'dark');
+    setupDropZone();
+    applyPermissions();
+    updateDashboard();
+    updateAIStatus();
+    renderQuestionList();
+    document.getElementById('examTimeLabel').textContent = settings.examMinutes;
+}
+
+function migrateLegacy() {
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy && !localStorage.getItem(STORAGE_KEY)) {
+        localStorage.setItem(STORAGE_KEY, legacy);
+    }
+}
+
+async function loadData() {
+    const saved = await dbGet(STORAGE_KEY, readLocalJSON(STORAGE_KEY, null));
+    if (saved) {
+        const data = saved;
+        if (Array.isArray(data)) {
+            studySets = data.length ? [makeStudySet('Bộ ôn cũ', data, ADMIN_ID)] : [];
+        } else {
+            studySets = Array.isArray(data.sets) ? data.sets.map(normalizeStudySet) : [];
+            activeSetId = data.activeSetId || '';
+        }
+    }
+    history = await dbGet(HISTORY_KEY, readLocalJSON(HISTORY_KEY, []));
+    activeSetId = await dbGet(ACTIVE_SET_KEY, localStorage.getItem(ACTIVE_SET_KEY) || activeSetId || getVisibleStudySets()[0]?.id || '');
+    syncActiveQuestions();
+    dbSet(STORAGE_KEY, { activeSetId, sets: studySets });
+    dbSet(HISTORY_KEY, history);
+    dbSet(ACTIVE_SET_KEY, activeSetId || '');
+}
+
+function saveData() {
+    const active = getActiveSet();
+    if (active) active.questions = questions;
+    const payload = { activeSetId, sets: studySets };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    localStorage.setItem(ACTIVE_SET_KEY, activeSetId || '');
+    dbSet(STORAGE_KEY, payload);
+    dbSet(ACTIVE_SET_KEY, activeSetId || '');
+    updateDashboard();
+}
+
+function ensureActiveSet(name = 'Bộ ôn mới') {
+    let active = getActiveSet();
+    if (!active) {
+        active = makeStudySet(name, []);
+        studySets.unshift(active);
+        activeSetId = active.id;
+        syncActiveQuestions();
+    }
+    return active;
+}
+
+function makeStudySet(name, qs = [], ownerId = currentUser?.id || ADMIN_ID) {
+    return {
+        id: 'set_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8),
+        name: (name || 'Bộ ôn chưa đặt tên').trim(),
+        ownerId,
+        questions: qs,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+    };
+}
+
+function normalizeStudySet(set) {
+    return {
+        id: set.id || makeStudySet().id,
+        name: set.name || 'Bộ ôn chưa đặt tên',
+        ownerId: set.ownerId || ADMIN_ID,
+        questions: Array.isArray(set.questions) ? set.questions : [],
+        createdAt: set.createdAt || Date.now(),
+        updatedAt: set.updatedAt || Date.now()
+    };
+}
+
+function getActiveSet() {
+    const visible = getVisibleStudySets();
+    return visible.find(s => s.id === activeSetId) || visible[0] || null;
+}
+
+function getVisibleStudySets() {
+    return studySets;
+}
+
+function canDeleteStudySet(set) {
+    return !!set && (isAdmin() || set.ownerId === currentUser?.id);
+}
+
+function syncActiveQuestions() {
+    const active = getActiveSet();
+    activeSetId = active?.id || '';
+    questions = active ? active.questions : [];
+}
+
+function setActiveSet(id, page = '') {
+    const set = getVisibleStudySets().find(s => s.id === id);
+    if (!set) return;
+    activeSetId = id;
+    syncActiveQuestions();
+    saveData();
+    renderQuestionList();
+    if (page) navigate(page);
+}
+
+async function loadSettings() {
+    const s = await dbGet(SETTINGS_KEY, readLocalJSON(SETTINGS_KEY, null));
+    if (s) {
+        settings = { ...settings, ...s };
+        settings.aiProvider = 'gemini';
+        delete settings.aiCustomUrl;
+        document.getElementById('aiApiKey').value = settings.aiApiKey || '';
+        document.getElementById('examMinutes').value = settings.examMinutes;
+        document.getElementById('subjectName').value = settings.subjectName || '';
+    }
+    document.getElementById('aiProvider').value = 'gemini';
+    updateModelOptions(settings.aiModel);
+    dbSet(SETTINGS_KEY, settings);
+}
+
+function onProviderChange() {
+    updateModelOptions();
+    saveSettings();
+}
+
+function updateModelOptions(preferredModel) {
+    const provider = 'gemini';
+    const modelGroup = document.getElementById('modelGroup');
+    const select = document.getElementById('aiModel');
+
+    modelGroup.style.display = 'block';
+    const models = AI_MODELS.gemini;
+    const saved = preferredModel || settings.aiModel;
+    select.innerHTML = models.map(m =>
+        `<option value="${m.value}">${m.label}</option>`
+    ).join('');
+
+    const match = models.find(m => m.value === saved);
+    select.value = match ? match.value : models[0].value;
+    updateModelHint();
+}
+
+function onModelChange() {
+    updateModelHint();
+    saveSettings();
+}
+
+function updateModelHint() {
+    const hint = document.getElementById('modelHint');
+    const models = AI_MODELS.gemini;
+    const selected = document.getElementById('aiModel').value;
+    const model = models.find(m => m.value === selected);
+    hint.textContent = model ? model.hint : '';
+}
+
+function saveSettings() {
+    settings.aiProvider = 'gemini';
+    settings.aiApiKey = document.getElementById('aiApiKey').value.trim();
+    settings.aiModel = document.getElementById('aiModel').value;
+    settings.examMinutes = parseInt(document.getElementById('examMinutes').value) || 45;
+    settings.subjectName = document.getElementById('subjectName').value.trim();
+    document.getElementById('examTimeLabel').textContent = settings.examMinutes;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    dbSet(SETTINGS_KEY, settings);
+    updateAIStatus();
+}
+
+function updateAIStatus() {
+    const bar = document.getElementById('aiStatusBar');
+    const text = document.getElementById('aiStatusText');
+    if (settings.aiApiKey) {
+        bar.className = 'ai-status ready';
+        text.textContent = `Gemini AI đã sẵn sàng (${settings.aiModel}) — kết hợp phân tích thông minh + AI`;
+    } else {
+        bar.className = 'ai-status off';
+        text.textContent = 'Đang dùng bộ phân tích thông minh (không cần API). Nhập Gemini API key trong Cài đặt để chính xác hơn.';
+    }
+}
+
+// ==================== NAV ====================
+function navigate(page) {
+    if (page !== 'dashboard' && !requireLogin()) return;
+    if (!isAdmin() && (page === 'questions' || page === 'settings')) {
+        toast('Tài khoản user không có quyền vào mục này', 'error');
+        page = 'dashboard';
+    }
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+    document.getElementById('sidebar').classList.remove('open');
+    if (page === 'questions') renderQuestionList();
+    if (page === 'dashboard') updateDashboard();
+    if (page === 'settings') renderUserManagement();
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+    localStorage.setItem('ontn_theme', next);
+    document.getElementById('themeIcon').textContent = next === 'light' ? '🌙' : '☀️';
+}
+
+function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : '');
+    document.getElementById('themeIcon').textContent = t === 'light' ? '🌙' : '☀️';
+}
+
+function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+}
+
+// ==================== DASHBOARD ====================
+function updateDashboard() {
+    const visibleSets = getVisibleStudySets();
+    const totalQuestions = visibleSets.reduce((sum, set) => sum + set.questions.length, 0);
+    document.getElementById('statTotal').textContent = totalQuestions;
+    const visibleHistory = isAdmin() ? history : history.filter(h => h.userId === currentUser?.id);
+    document.getElementById('statSessions').textContent = visibleHistory.length;
+    if (visibleHistory.length) {
+        const avg = Math.round(visibleHistory.reduce((s, h) => s + h.percent, 0) / visibleHistory.length);
+        document.getElementById('statAvg').textContent = avg + '%';
+        document.getElementById('statLast').textContent = new Date(visibleHistory[0].date).toLocaleDateString('vi-VN');
+        const card = document.getElementById('recentHistoryCard');
+        card.style.display = 'block';
+        document.getElementById('recentHistory').innerHTML = visibleHistory.slice(0, 5).map(h =>
+            `<div class="history-item"><span>${escapeHtml(h.setName || 'Bộ ôn')} · ${h.mode} — ${h.score}/${h.total} câu</span><span>${h.details ? `<button class="btn btn-ghost" style="padding:6px 10px;font-size:12px" onclick="showHistoryReview('${h.id}')">Xem lại</button> ` : ''}<span class="badge badge-${h.percent >= 50 ? 'success' : 'primary'}">${h.percent}%</span></span></div>`
+        ).join('');
+    } else {
+        document.getElementById('statAvg').textContent = '—';
+        document.getElementById('statLast').textContent = '—';
+        document.getElementById('recentHistoryCard').style.display = 'none';
+    }
+    renderStudySetList();
+    document.getElementById('currentSetName').textContent = getActiveSet()?.name || 'Chưa có bộ ôn';
+}
+
+function renderStudySetList() {
+    const el = document.getElementById('studySetList');
+    const visibleSets = getVisibleStudySets();
+    if (!el) return;
+    if (!visibleSets.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">📚</div><p>Chưa có bộ ôn nào. Hãy import file để tạo bộ ôn riêng.</p></div>`;
+        return;
+    }
+    el.innerHTML = `<div class="mode-cards">` + visibleSets.map(set => {
+        const active = set.id === activeSetId;
+        const date = new Date(set.updatedAt || set.createdAt).toLocaleDateString('vi-VN');
+        const owner = users.find(u => u.id === set.ownerId);
+        return `
+            <div class="mode-card" style="${active ? 'border-color:var(--primary);background:rgba(99,102,241,0.08)' : ''}">
+                <div class="icon">📘</div>
+                <h3>${escapeHtml(set.name)}</h3>
+                <p>${set.questions.length} câu hỏi · Cập nhật ${date}${owner ? ' · Người thêm: ' + escapeHtml(owner.displayName || owner.username) : ''}</p>
+                <div class="btn-group" style="margin-top:14px">
+                    <button class="btn btn-primary" onclick="startStudySetQuiz('${set.id}')">Vào ôn thi</button>
+                    ${isAdmin() ? `<button class="btn btn-ghost" onclick="setActiveSet('${set.id}', 'questions')">Câu hỏi</button>` : ''}
+                    ${canDeleteStudySet(set) ? `<button class="btn btn-danger" onclick="deleteStudySet('${set.id}')">Xóa</button>` : ''}
+                </div>
+            </div>`;
+    }).join('') + `</div>`;
+}
+
+function deleteStudySet(id) {
+    const set = studySets.find(s => s.id === id);
+    if (!canDeleteStudySet(set)) { toast('Bạn không có quyền xóa bộ ôn này', 'error'); return; }
+    if (!set || !confirm(`Xóa bộ ôn "${set.name}" và toàn bộ câu hỏi trong bộ này?`)) return;
+    studySets = studySets.filter(s => s.id !== id);
+    if (activeSetId === id) activeSetId = studySets[0]?.id || '';
+    syncActiveQuestions();
+    saveData();
+    renderQuestionList();
+    toast('Đã xóa bộ ôn', 'info');
+}
+
+function startStudySetQuiz(id) {
+    if (!currentUser) {
+        activeSetId = id;
+        syncActiveQuestions();
+        saveData();
+        showLogin();
+        toast('Vui lòng đăng nhập để bắt đầu ôn thi', 'info');
+        return;
+    }
+    setActiveSet(id);
+    startQuiz('practice');
+}
+
+// ==================== QUESTIONS CRUD ====================
+function renderQuestionList() {
+    const currentSetEl = document.getElementById('currentSetName');
+    if (currentSetEl) currentSetEl.textContent = getActiveSet()?.name || 'Chưa có bộ ôn';
+    const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const filtered = questions.map((q, i) => ({ q, i })).filter(({ q }) =>
+        !search || q.q.toLowerCase().includes(search) || q.a.some(a => a.toLowerCase().includes(search))
+    );
+    const el = document.getElementById('questionList');
+    if (!filtered.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">📝</div><p>${questions.length ? 'Không tìm thấy câu hỏi phù hợp' : 'Chưa có câu hỏi. Hãy import file hoặc thêm thủ công!'}</p></div>`;
+        return;
+    }
+    el.innerHTML = filtered.map(({ q, i }) => `
+        <div class="question-item">
+            <div class="num">${i + 1}</div>
+            <div class="content">
+                <div class="q-text">${escapeHtml(q.q)}</div>
+                <div class="meta">Đáp án: ${String.fromCharCode(65 + q.correct)}${q.source ? ' · ' + escapeHtml(q.source) : ''}</div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-ghost" onclick="editQuestion(${i})">Sửa</button>
+                <button class="btn btn-danger" onclick="deleteQuestion(${i})">Xóa</button>
+            </div>
+        </div>`).join('');
+}
+
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+function isImageFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    return ['jpg','jpeg','png','webp','bmp','gif'].includes(ext) || file.type.startsWith('image/');
+}
+
+function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+function renderQuestionImage(image, className = 'question-image') {
+    return image ? `<img class="${className}" src="${image}" alt="Ảnh câu hỏi">` : '';
+}
+
+async function previewQuestionImage(file) {
+    if (!file) return;
+    if (!isImageFile(file)) { toast('Vui lòng chọn file ảnh', 'error'); return; }
+    const dataUrl = await readFileAsDataURL(file);
+    document.getElementById('qimageData').value = dataUrl;
+    const preview = document.getElementById('qimagePreview');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+}
+
+function clearQuestionImage() {
+    document.getElementById('qimageFile').value = '';
+    document.getElementById('qimageData').value = '';
+    const preview = document.getElementById('qimagePreview');
+    preview.removeAttribute('src');
+    preview.style.display = 'none';
+}
+
+function showQuestionForm() {
+    if (!isAdmin()) { toast('Chỉ admin được thêm câu hỏi thủ công', 'error'); return; }
+    currentEditIndex = -1;
+    document.getElementById('formTitle').textContent = 'Thêm câu hỏi';
+    clearForm();
+    document.getElementById('questionModal').classList.add('show');
+}
+
+function hideQuestionForm() { document.getElementById('questionModal').classList.remove('show'); }
+
+function editQuestion(i) {
+    if (!isAdmin()) { toast('Chỉ admin được sửa câu hỏi', 'error'); return; }
+    currentEditIndex = i;
+    const q = questions[i];
+    document.getElementById('formTitle').textContent = 'Sửa câu hỏi';
+    document.getElementById('qtext').value = q.q;
+    document.getElementById('optA').value = q.a[0].replace(/^[A-D]\.\s*/i, '');
+    document.getElementById('optB').value = q.a[1].replace(/^[A-D]\.\s*/i, '');
+    document.getElementById('optC').value = q.a[2].replace(/^[A-D]\.\s*/i, '');
+    document.getElementById('optD').value = q.a[3].replace(/^[A-D]\.\s*/i, '');
+    document.getElementById('correct').value = q.correct;
+    document.getElementById('questionModal').classList.add('show');
+}
+
+function saveQuestion() {
+    if (!isAdmin()) { toast('Chỉ admin được lưu câu hỏi thủ công', 'error'); return; }
+    const qtext = document.getElementById('qtext').value.trim();
+    const opts = ['optA','optB','optC','optD'].map(id => document.getElementById(id).value.trim());
+    const correct = parseInt(document.getElementById('correct').value);
+    if (!qtext || opts.some(o => !o)) { toast('Vui lòng nhập đầy đủ!', 'error'); return; }
+    const active = ensureActiveSet('Bộ nhập thủ công');
+    const newQ = { q: qtext, a: opts.map((o, i) => `${String.fromCharCode(65+i)}. ${o}`), correct };
+    if (currentEditIndex >= 0) questions[currentEditIndex] = { ...questions[currentEditIndex], ...newQ };
+    else questions.push(newQ);
+    active.updatedAt = Date.now();
+    saveData();
+    hideQuestionForm();
+    renderQuestionList();
+    toast('Đã lưu câu hỏi!', 'success');
+}
+
+function deleteQuestion(i) {
+    if (!isAdmin()) { toast('Chỉ admin được xóa câu hỏi thủ công', 'error'); return; }
+    if (confirm('Xóa câu hỏi này?')) {
+        questions.splice(i, 1);
+        const active = getActiveSet();
+        if (active) active.updatedAt = Date.now();
+        saveData();
+        renderQuestionList();
+        toast('Đã xóa', 'info');
+    }
+}
+
+function clearForm() {
+    ['qtext','optA','optB','optC','optD'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('correct').value = '0';
+}
+
+function clearAll() {
+    if (!isAdmin()) { toast('Chỉ admin được xóa toàn bộ dữ liệu', 'error'); return; }
+    if (!confirm('Xóa TẤT CẢ bộ ôn, câu hỏi và lịch sử?')) return;
+    studySets = []; activeSetId = ''; questions = []; history = [];
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(HISTORY_KEY);
+    localStorage.removeItem(ACTIVE_SET_KEY);
+    dbDelete(STORAGE_KEY);
+    dbDelete(HISTORY_KEY);
+    dbDelete(ACTIVE_SET_KEY);
+    updateDashboard();
+    renderQuestionList();
+    toast('Đã xóa toàn bộ dữ liệu', 'info');
+}
+
+function exportJSON() {
+    if (!isAdmin()) { toast('Chỉ admin được xuất JSON', 'error'); return; }
+    const active = getActiveSet();
+    const payload = active ? active.questions : [];
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${(active?.name || 'on-thi-tn').replace(/[\\/:*?"<>|]/g, '-')}-${Date.now()}.json`;
+    a.click();
+    toast('Đã xuất file JSON', 'success');
+}
+
+function importJSON(e) {
+    if (!isAdmin()) { toast('Chỉ admin được nhập JSON', 'error'); e.target.value = ''; return; }
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const data = JSON.parse(ev.target.result);
+            if (!Array.isArray(data)) throw new Error('Invalid');
+            const valid = data.filter(q => q.q && q.a && q.a.length >= 4);
+            const added = valid.length;
+            if (!added) throw new Error('Empty');
+            const set = makeStudySet(file.name.replace(/\.json$/i, ''), valid);
+            studySets.unshift(set);
+            activeSetId = set.id;
+            syncActiveQuestions();
+            saveData();
+            renderQuestionList();
+            toast(`Đã nhập bộ "${set.name}" với ${added} câu hỏi`, 'success');
+        } catch { toast('File JSON không hợp lệ', 'error'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+}
+
+// ==================== BULK PARSE ====================
+function showBulkModal() {
+    if (!isAdmin()) { toast('Chỉ admin được nhập nhanh thủ công', 'error'); return; }
+    document.getElementById('bulkModal').classList.add('show');
+}
+function hideBulkModal() { document.getElementById('bulkModal').classList.remove('show'); }
+
+function parseBulk() {
+    if (!isAdmin()) { toast('Chỉ admin được nhập nhanh thủ công', 'error'); return; }
+    const text = document.getElementById('bulkText').value.trim();
+    if (!text) { toast('Vui lòng dán nội dung!', 'error'); return; }
+    const parsed = smartParse(text, 'Nhập nhanh');
+    if (parsed.length) {
+        const active = ensureActiveSet('Bộ nhập nhanh');
+        questions.push(...parsed);
+        active.updatedAt = Date.now();
+        saveData();
+        renderQuestionList();
+        hideBulkModal();
+        toast(`Đã thêm ${parsed.length} câu hỏi`, 'success');
+    } else toast('Không nhận diện được câu hỏi nào', 'error');
+}
+
+// ==================== SMART PARSER ====================
+function smartParse(text, source = '') {
+    const results = [];
+    const normalized = text.replace(/\r\n/g, '\n').replace(/\t/g, ' ');
+
+    // Pattern 1: Câu X. / X. / Question X
+    const blocks = normalized.split(/(?=(?:Câu\s*\d+|Question\s*\d+|\d+\.)[\s.:])/i);
+    for (const block of blocks) {
+        const q = parseBlock(block.trim(), source);
+        if (q) results.push(q);
+    }
+
+    if (results.length === 0) {
+        // Pattern 2: line-by-line
+        const lines = normalized.split('\n').map(l => l.trim()).filter(Boolean);
+        let cur = null;
+        for (const line of lines) {
+            if (/^(?:Câu\s*)?\d+[\.\):]/i.test(line) || /^Question\s*\d+/i.test(line)) {
+                if (cur && cur.a.length >= 4) results.push(normalizeQ(cur, source));
+                cur = { q: line, a: [], correct: 0 };
+            } else if (/^[A-D][\.\):]\s*/i.test(line) && cur) {
+                cur.a.push(line);
+            } else if (cur && /đáp\s*án|lựa\s*chọn|answer/i.test(line)) {
+                cur.correct = detectAnswer(line);
+            } else if (cur && cur.a.length === 0) {
+                cur.q += ' ' + line;
+            }
+        }
+        if (cur && cur.a.length >= 4) results.push(normalizeQ(cur, source));
+    }
+
+    return dedupeQuestions(results);
+}
+
+function parseBlock(block, source) {
+    if (!block || block.length < 10) return null;
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return null;
+
+    let qLine = lines[0];
+    const opts = [];
+    let correct = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        if (/^[A-D][\.\):]\s*/i.test(line)) opts.push(line);
+        else if (/đáp\s*án|lựa\s*chọn|answer|key/i.test(line)) correct = detectAnswer(line);
+        else if (opts.length === 0) qLine += ' ' + line;
+    }
+
+    if (opts.length < 4) return null;
+    return normalizeQ({ q: qLine, a: opts.slice(0, 4), correct }, source);
+}
+
+function detectAnswer(line) {
+    const m = line.match(/[A-D]/gi);
+    if (!m) return 0;
+    const letter = m[m.length - 1].toUpperCase();
+    return 'ABCD'.indexOf(letter);
+}
+
+function normalizeQ(raw, source) {
+    const a = raw.a.slice(0, 4).map((opt, i) => {
+        const cleaned = opt.replace(/^[A-D][\.\):]\s*/i, '').trim();
+        return `${String.fromCharCode(65 + i)}. ${cleaned}`;
+    });
+    while (a.length < 4) a.push(`${String.fromCharCode(65 + a.length)}. `);
+    let correct = raw.correct;
+    if (correct < 0 || correct > 3) correct = 0;
+    return { q: raw.q.replace(/^(?:Câu\s*)?\d+[\.\):]\s*/i, '').trim(), a, correct, source: source || undefined };
+}
+
+function dedupeQuestions(arr) {
+    const seen = new Set();
+    return arr.filter(q => {
+        const key = q.q.substring(0, 60).toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
+// ==================== FILE IMPORT ====================
+function setupDropZone() {
+    const zone = document.getElementById('dropZone');
+    ['dragenter','dragover','dragleave','drop'].forEach(ev => {
+        zone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+    });
+    zone.addEventListener('dragover', () => zone.classList.add('dragover'));
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+        zone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+}
+
+function handleFiles(files) {
+    if (!requireLogin()) return;
+    for (const f of files) fileQueue.push(f);
+    renderFileList();
+}
+
+function renderFileList() {
+    const el = document.getElementById('fileList');
+    el.innerHTML = fileQueue.map((f, i) =>
+        `<span class="file-chip">📄 ${escapeHtml(f.name)} <span style="cursor:pointer" onclick="removeFile(${i})">✕</span></span>`
+    ).join('');
+    document.getElementById('btnProcessFiles').disabled = fileQueue.length === 0;
+}
+
+function removeFile(i) { fileQueue.splice(i, 1); renderFileList(); }
+function clearFileQueue() { fileQueue = []; renderFileList(); }
+
+async function extractTextFromFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'txt') return await file.text();
+
+    if (ext === 'doc') {
+        throw new Error('File .doc Word cũ chưa đọc trực tiếp được. Mở file bằng Word rồi chọn Save As/Lưu thành .docx, sau đó import lại.');
+    }
+
+    if (ext === 'docx') {
+        const buf = await file.arrayBuffer();
+        try {
+            const result = await mammoth.extractRawText({ arrayBuffer: buf });
+            return result.value;
+        } catch (err) {
+            throw new Error('Không đọc được file .docx này. Hãy mở bằng Word, lưu lại thành .docx mới rồi import lại.');
+        }
+    }
+
+    if (ext === 'pdf') {
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map(it => it.str).join(' ') + '\n';
+        }
+        return text;
+    }
+
+    if (['jpg','jpeg','png','webp','bmp'].includes(ext)) {
+        const { data: { text } } = await Tesseract.recognize(file, 'vie+eng', {
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    document.getElementById('processStatus').textContent = `OCR ${file.name}: ${Math.round(m.progress * 100)}%`;
+                }
+            }
+        });
+        return text;
+    }
+
+    throw new Error(`Định dạng .${ext} chưa hỗ trợ`);
+}
+
+async function processAllFiles() {
+    if (!requireLogin()) return;
+    if (!fileQueue.length) return;
+    const prog = document.getElementById('processProgress');
+    const bar = document.getElementById('processBar');
+    const status = document.getElementById('processStatus');
+    prog.style.display = 'block';
+    document.getElementById('btnProcessFiles').disabled = true;
+
+    let totalAdded = 0;
+    const allTexts = [];
+    const importedQuestions = [];
+
+    for (let i = 0; i < fileQueue.length; i++) {
+        const file = fileQueue[i];
+        const pct = Math.round((i / fileQueue.length) * 50);
+        bar.style.width = pct + '%';
+        status.textContent = `Đang đọc file ${i + 1}/${fileQueue.length}: ${file.name}...`;
+
+        try {
+            const text = await extractTextFromFile(file);
+            allTexts.push({ name: file.name, text });
+        } catch (e) {
+            toast(`Lỗi đọc ${file.name}: ${e.message}`, 'error');
+        }
+    }
+
+    bar.style.width = '60%';
+    status.textContent = 'Đang phân tích câu hỏi...';
+
+    for (const { name, text } of allTexts) {
+        let parsed = smartParse(text, name);
+
+        if (settings.aiApiKey && parsed.length < 2) {
+            status.textContent = `AI đang phân tích ${name}...`;
+            try {
+                const aiParsed = await aiParseQuestions(text, name);
+                if (aiParsed.length > parsed.length) parsed = aiParsed;
+            } catch (e) {
+                const info = e.title ? e : parseAIError(e.status || 0, e.message || e);
+                toast(`${info.title} — dùng phân tích thông minh cho ${name}`, 'error');
+            }
+        } else if (settings.aiApiKey && text.length > 500) {
+            status.textContent = `AI đang tinh chỉnh ${name}...`;
+            try {
+                const aiParsed = await aiParseQuestions(text, name);
+                if (aiParsed.length >= parsed.length) parsed = aiParsed;
+            } catch { /* fallback to smart parse */ }
+        }
+
+        if (parsed.length) {
+            importedQuestions.push(...parsed);
+            totalAdded += parsed.length;
+        }
+    }
+
+    if (importedQuestions.length) {
+        const typedName = document.getElementById('importSetName').value.trim();
+        const fallbackName = fileQueue.length === 1
+            ? fileQueue[0].name.replace(/\.[^.]+$/, '')
+            : `Bộ ôn ${new Date().toLocaleDateString('vi-VN')}`;
+        const set = makeStudySet(typedName || fallbackName, importedQuestions);
+        studySets.unshift(set);
+        activeSetId = set.id;
+        syncActiveQuestions();
+        document.getElementById('importSetName').value = '';
+    }
+
+    bar.style.width = '100%';
+    status.textContent = totalAdded
+        ? `Hoàn tất! Đã tạo bộ ôn với ${totalAdded} câu hỏi từ ${allTexts.length} file.`
+        : `Hoàn tất nhưng chưa nhận diện được câu hỏi từ ${allTexts.length} file.`;
+    saveData();
+    renderQuestionList();
+    fileQueue = [];
+    renderFileList();
+    document.getElementById('btnProcessFiles').disabled = false;
+
+    if (totalAdded) toast(`✅ Đã thêm ${totalAdded} câu hỏi!`, 'success');
+    else toast('Không nhận diện được câu hỏi. Thử cấu hình AI hoặc kiểm tra định dạng file.', 'error');
+
+    setTimeout(() => { prog.style.display = 'none'; bar.style.width = '0%'; }, 3000);
+}
+
+// ==================== AI API ====================
+async function aiParseQuestions(text, source = "") {
+
+    const prompt = `
+Bạn là AI chuyên trích xuất câu hỏi trắc nghiệm tiếng Việt.
+
+CHỈ trả về JSON Array hợp lệ.
+
+Không dùng markdown.
+
+Không dùng \`\`\`.
+
+Không giải thích.
+
+Mỗi phần tử phải đúng dạng:
+
+{
+  "q":"Nội dung câu hỏi",
+  "a":[
+    "A. ...",
+    "B. ...",
+    "C. ...",
+    "D. ..."
+  ],
+  "correct":0
+}
+
+Quy tắc:
+
+- correct:
+A = 0
+B = 1
+C = 2
+D = 3
+
+- Nếu không xác định được đáp án:
+correct = 0
+
+- Luôn đủ đúng 4 đáp án.
+
+- Không tự sáng tạo.
+
+- Bỏ qua câu lỗi.
+
+Văn bản:
+
+${text}
+`;
+
+    const raw = await callAI(prompt);
+
+    let cleaned = raw.trim();
+
+    cleaned = cleaned
+        .replace(/^```json/i, "")
+        .replace(/^```/i, "")
+        .replace(/```$/i, "")
+        .trim();
+
+    let parsed;
+
+    try {
+        parsed = JSON.parse(cleaned);
+    } catch (e) {
+
+        const match = cleaned.match(/\[[\s\S]*\]/);
+
+        if (!match) {
+            throw new Error("Gemini không trả JSON hợp lệ.");
+        }
+
+        parsed = JSON.parse(match[0]);
+    }
+
+    if (!Array.isArray(parsed)) {
+        throw new Error("Kết quả không phải JSON Array.");
+    }
+
+    const result = [];
+
+    for (const item of parsed) {
+
+        if (
+            typeof item?.q !== "string" ||
+            !Array.isArray(item?.a)
+        ) {
+            continue;
+        }
+
+        const answers = item.a
+            .filter(x => typeof x === "string")
+            .slice(0, 4);
+
+        if (answers.length !== 4) {
+            continue;
+        }
+
+        let correct = Number(item.correct);
+
+        if (!Number.isInteger(correct)) {
+            correct = 0;
+        }
+
+        correct = Math.max(
+            0,
+            Math.min(3, correct)
+        );
+
+        result.push({
+            q: item.q.trim(),
+            a: answers.map(x => x.trim()),
+            correct
+        });
+    }
+
+    return result;
+}
+
+function parseAIError(status, body) {
+    let msg = '';
+    try {
+        const j = typeof body === 'string' ? JSON.parse(body) : body;
+        msg = j?.error?.message || j?.message || '';
+    } catch { msg = String(body || ''); }
+
+    const lower = msg.toLowerCase();
+    if (status === 429 || lower.includes('quota') || lower.includes('rate limit') || lower.includes('resource exhausted')) {
+        return {
+            title: 'Hết quota / vượt giới hạn (429)',
+            detail: 'API key Gemini miễn phí đã hết lượt hôm nay hoặc gọi quá nhanh.',
+            tips: [
+                'Chọn model khác trong danh sách: Gemini 1.5 Flash hoặc 2.0 Flash Lite',
+                'Đợi 1–24 giờ để quota reset, hoặc tạo API key mới tại aistudio.google.com',
+                'Vẫn dùng được app khi bỏ trống API key: phân tích thông minh không cần API',
+                'Import file Word/PDF/TXT vẫn hoạt động bình thường không cần AI'
+            ]
+        };
+    }
+    if (status === 401 || status === 403 || lower.includes('api key') || lower.includes('permission')) {
+        return {
+            title: 'API key không hợp lệ (' + status + ')',
+            detail: 'Key sai, hết hạn, hoặc chưa bật Generative Language API.',
+            tips: ['Tạo key mới tại Google AI Studio', 'Kiểm tra không có khoảng trắng thừa khi dán key']
+        };
+    }
+    if (status === 404 || lower.includes('not found') || lower.includes('model')) {
+        return {
+            title: 'Model không tồn tại (' + status + ')',
+            detail: 'Tên model sai hoặc tài khoản chưa được phép dùng model này.',
+            tips: ['Chọn model khác trong danh sách', 'Thử Gemini 1.5 Flash hoặc 2.0 Flash Lite']
+        };
+    }
+    return {
+        title: 'Lỗi kết nối AI (' + (status || '?') + ')',
+        detail: msg.substring(0, 200) || 'Không xác định được lỗi',
+        tips: ['Kiểm tra mạng internet', 'Thử lại sau vài phút']
+    };
+}
+
+function showAIErrorHelp(errInfo) {
+    const el = document.getElementById('aiErrorHelp');
+    if (!el || !errInfo) { if (el) el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.innerHTML = `<strong>${errInfo.title}</strong><br>${errInfo.detail}<ul style="margin:8px 0 0 18px">` +
+        errInfo.tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
+}
+
+async function callGemini(prompt, model) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${settings.aiApiKey}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    clearTimeout(timeout);
+    const text = await res.text();
+    if (!res.ok) {
+        const err = parseAIError(res.status, text);
+        err.status = res.status;
+        err.model = model;
+        throw err;
+    }
+    const data = JSON.parse(text);
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+async function callAI(prompt) {
+    if (!settings.aiApiKey) {
+        throw parseAIError(401, 'Thiếu Gemini API key.');
+    }
+
+    const fallbackModels = AI_MODELS.gemini.map(m => m.value);
+    const models = [settings.aiModel, ...fallbackModels].filter((model, index, arr) =>
+        model && arr.indexOf(model) === index
+    );
+    let lastError = null;
+
+    for (const model of models) {
+        try {
+            const text = await callGemini(prompt, model);
+            if (text.trim()) {
+                if (model !== settings.aiModel) {
+                    settings.aiModel = model;
+                    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+                    dbSet(SETTINGS_KEY, settings);
+                    updateModelOptions(model);
+                }
+                return text.trim();
+            }
+        } catch (err) {
+            lastError = err;
+            if (err.status === 401 || err.status === 403 || err.status === 429) {
+                throw err;
+            }
+            console.warn('Gemini model failed:', model, err);
+        }
+    }
+
+    throw lastError || new Error("Không thể gọi Gemini API.");
+}
+
+async function testAI() {
+    saveSettings();
+    if (!settings.aiApiKey) {
+        toast('Hãy nhập Gemini API key', 'error');
+        return;
+    }
+    showAIErrorHelp(null);
+    try {
+        const r = await callAI('Trả lời đúng 1 từ: OK');
+        showAIErrorHelp(null);
+        toast('Kết nối AI thành công! ' + r.substring(0, 30), 'success');
+    } catch (e) {
+        const info = e.title ? e : parseAIError(0, e.message);
+        showAIErrorHelp(info);
+        toast(info.title, 'error');
+    }
+}
+
+// ==================== QUIZ ====================
+function startQuiz(mode) {
+    if (!requireLogin()) return;
+    const active = getActiveSet();
+    if (!active || !questions.length) { toast('Bộ ôn hiện tại chưa có câu hỏi! Hãy chọn bộ khác hoặc import file trước.', 'error'); navigate(getVisibleStudySets().length ? 'dashboard' : 'import'); return; }
+    lastQuizMode = mode;
+    quizMode = mode;
+    quizQuestions = [...questions];
+    if (mode === 'shuffle' || mode === 'exam') shuffleArray(quizQuestions);
+    quizIdx = 0; quizScore = 0;
+    quizAnswered = new Array(quizQuestions.length).fill(false);
+    quizSelections = new Array(quizQuestions.length).fill(-1);
+
+    document.getElementById('quizSetup').style.display = 'none';
+    document.getElementById('quizResult').style.display = 'none';
+    document.getElementById('quizActive').style.display = 'block';
+    navigate('quiz');
+
+    const badges = { practice: 'Ôn tập', exam: 'Thi thử', shuffle: 'Ngẫu nhiên' };
+    document.getElementById('quizModeBadge').textContent = badges[mode] || mode;
+
+    if (mode === 'exam') {
+        timeLeft = settings.examMinutes * 60;
+        document.getElementById('timerDisplay').style.display = 'block';
+        startTimer();
+    } else {
+        document.getElementById('timerDisplay').style.display = 'none';
+        if (timerInterval) clearInterval(timerInterval);
+    }
+
+    loadQuizQ();
+}
+
+function shuffleArray(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+}
+
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+    document.getElementById('timerDisplay').textContent = `⏱️ ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function loadQuizQ() {
+    const q = quizQuestions[quizIdx];
+    document.getElementById('currentNum').textContent = quizIdx + 1;
+    document.getElementById('totalNum').textContent = quizQuestions.length;
+    document.getElementById('quizProgress').style.width = ((quizIdx + 1) / quizQuestions.length * 100) + '%';
+    document.getElementById('quizQuestion').textContent = q.q;
+
+    const fb = document.getElementById('quizFeedback');
+    fb.className = 'feedback'; fb.textContent = '';
+
+    document.getElementById('quizOptions').innerHTML = q.a.map((opt, i) => {
+        let cls = 'option';
+        const sel = quizSelections[quizIdx];
+        if (quizMode === 'practice' && quizAnswered[quizIdx]) {
+            if (i === q.correct) cls += ' correct';
+            else if (i === sel && sel !== q.correct) cls += ' wrong';
+        } else if (quizMode === 'exam' && sel === i) cls += ' selected';
+        else if (quizMode === 'practice' && sel === i) cls += ' selected';
+        return `<div class="${cls}" onclick="selectQ(${i})"><span class="letter">${String.fromCharCode(65+i)}</span><span>${escapeHtml(opt.replace(/^[A-D]\.\s*/i,''))}</span></div>`;
+    }).join('');
+
+    if (quizMode === 'practice' && quizAnswered[quizIdx]) {
+        const sel = quizSelections[quizIdx];
+        fb.className = 'feedback show ' + (sel === q.correct ? 'ok' : 'err');
+        fb.textContent = sel === q.correct ? '✓ Chính xác!' : `✕ Sai! Đáp án đúng: ${String.fromCharCode(65 + q.correct)}`;
+    }
+}
+
+function selectQ(i) {
+    if (quizMode === 'practice' && quizAnswered[quizIdx]) return;
+    quizSelections[quizIdx] = i;
+    if (quizMode === 'practice') {
+        if (!quizAnswered[quizIdx]) {
+            quizAnswered[quizIdx] = true;
+            if (i === quizQuestions[quizIdx].correct) quizScore++;
+        }
+    }
+    loadQuizQ();
+}
+
+function nextQ() { if (quizIdx < quizQuestions.length - 1) { quizIdx++; loadQuizQ(); } }
+function prevQ() { if (quizIdx > 0) { quizIdx--; loadQuizQ(); } }
+
+function finishQuiz() {
+    if (timerInterval) clearInterval(timerInterval);
+    quizScore = quizSelections.reduce((s, sel, i) => s + (sel === quizQuestions[i].correct ? 1 : 0), 0);
+    const total = quizQuestions.length;
+    const percent = total ? Math.round(quizScore / total * 100) : 0;
+    lastQuizReview = quizQuestions.map((q, i) => {
+        const selected = quizSelections[i];
+        return {
+            q: q.q,
+            a: q.a,
+            correct: q.correct,
+            selected,
+            isCorrect: selected === q.correct,
+            source: q.source || ''
+        };
+    });
+    const wrongCount = lastQuizReview.filter(x => !x.isCorrect).length;
+
+    const active = getActiveSet();
+    history.unshift({
+        id: 'hist_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8),
+        date: Date.now(),
+        userId: currentUser?.id || '',
+        username: currentUser?.username || '',
+        mode: quizMode,
+        setId: active?.id || '',
+        setName: active?.name || 'Bộ ôn',
+        score: quizScore,
+        total,
+        percent,
+        details: lastQuizReview
+    });
+    if (history.length > 50) history.pop();
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    dbSet(HISTORY_KEY, history);
+
+    document.getElementById('quizActive').style.display = 'none';
+    document.getElementById('quizResult').style.display = 'block';
+    document.getElementById('quizReviewCard').style.display = 'none';
+    document.getElementById('resultScore').textContent = percent + '%';
+    document.getElementById('resultTitle').textContent = percent >= 80 ? '🎉 Xuất sắc!' : percent >= 50 ? '👍 Khá tốt!' : '💪 Cố gắng thêm!';
+    document.getElementById('resultDetail').textContent = `Bạn trả lời đúng ${quizScore}/${total} câu (${percent}%). Sai ${wrongCount} câu.`;
+    document.getElementById('retryWrongBtn').style.display = wrongCount ? '' : 'none';
+    updateDashboard();
+}
+
+function renderQuizReview(filter = 'all') {
+    const card = document.getElementById('quizReviewCard');
+    const list = document.getElementById('quizReviewList');
+    const items = lastQuizReview.filter(item =>
+        filter === 'all' || (filter === 'wrong' && !item.isCorrect) || (filter === 'correct' && item.isCorrect)
+    );
+    card.style.display = 'block';
+    if (!items.length) {
+        list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Không có câu phù hợp để hiển thị.</p></div>`;
+        return;
+    }
+    list.innerHTML = items.map((item, idx) => {
+        const selectedText = item.selected >= 0 ? item.a[item.selected] : 'Chưa chọn';
+        return `
+            <div class="question-item" style="align-items:flex-start">
+                <div class="num">${idx + 1}</div>
+                <div class="content">
+                    <div class="q-text" style="white-space:normal">${escapeHtml(item.q)}</div>
+                    <div class="meta">Bạn chọn: ${escapeHtml(selectedText.replace(/^[A-D]\.\s*/i, ''))}</div>
+                    <div class="meta">Đáp án đúng: ${String.fromCharCode(65 + item.correct)}. ${escapeHtml(item.a[item.correct].replace(/^[A-D]\.\s*/i, ''))}</div>
+                </div>
+                <span class="badge badge-${item.isCorrect ? 'success' : 'primary'}">${item.isCorrect ? 'Đúng' : 'Sai'}</span>
+            </div>`;
+    }).join('');
+}
+
+function retryWrongQuestions() {
+    const wrong = lastQuizReview.filter(item => !item.isCorrect);
+    if (!wrong.length) { toast('Không có câu sai để làm lại', 'info'); return; }
+    lastQuizMode = 'practice';
+    quizMode = 'practice';
+    quizQuestions = wrong.map(item => ({ q: item.q, a: item.a, correct: item.correct, source: item.source || 'Câu sai' }));
+    quizIdx = 0;
+    quizScore = 0;
+    quizAnswered = new Array(quizQuestions.length).fill(false);
+    quizSelections = new Array(quizQuestions.length).fill(-1);
+    document.getElementById('quizSetup').style.display = 'none';
+    document.getElementById('quizResult').style.display = 'none';
+    document.getElementById('quizReviewCard').style.display = 'none';
+    document.getElementById('quizActive').style.display = 'block';
+    document.getElementById('timerDisplay').style.display = 'none';
+    if (timerInterval) clearInterval(timerInterval);
+    document.getElementById('quizModeBadge').textContent = 'Làm lại câu sai';
+    navigate('quiz');
+    loadQuizQ();
+}
+
+function showHistoryReview(id) {
+    const h = history.find(item => item.id === id);
+    if (!h?.details) { toast('Lượt làm này chưa có dữ liệu chi tiết', 'error'); return; }
+    lastQuizReview = h.details;
+    document.getElementById('quizSetup').style.display = 'none';
+    document.getElementById('quizActive').style.display = 'none';
+    document.getElementById('quizResult').style.display = 'block';
+    document.getElementById('resultScore').textContent = h.percent + '%';
+    document.getElementById('resultTitle').textContent = `Xem lại: ${h.setName || 'Bộ ôn'}`;
+    document.getElementById('resultDetail').textContent = `Đúng ${h.score}/${h.total} câu (${h.percent}%).`;
+    document.getElementById('retryWrongBtn').style.display = lastQuizReview.some(x => !x.isCorrect) ? '' : 'none';
+    navigate('quiz');
+    renderQuizReview('all');
+}
+
+function exitQuiz() {
+    if (timerInterval) clearInterval(timerInterval);
+    document.getElementById('quizSetup').style.display = 'block';
+    document.getElementById('quizActive').style.display = 'none';
+    document.getElementById('quizResult').style.display = 'none';
+    navigate('dashboard');
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
